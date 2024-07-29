@@ -303,7 +303,7 @@
                 userInput.value = '';
 
                 try {
-                    const response = await fetch('http://localhost:5000/ask', {
+                    const response = await fetch('http://127.0.0.1:5000/ask', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -332,6 +332,17 @@
         
     </script>
     <script>
+        async function testServer() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/test');
+                const data = await response.json();
+                console.log(data.message);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        testServer();
+
         // Custom event tracking
         function trackEvent(category, action, label) {
             if (typeof gtag !== 'undefined') {

@@ -4,7 +4,7 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 app = Flask(__name__)
-CORS(app)  # This allows your frontend to make requests to this server
+CORS(app, resources={r"/ask": {"origins": "*"}})  # Be cautious with '*' in production
 
 # Define the model IDs
 primary_model_id = "gpt2-medium"
