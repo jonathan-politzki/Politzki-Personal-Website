@@ -272,173 +272,109 @@
     </main>
 
     <script>
-        console.log("Script started");
-        async function fetchRecentArticles() {
-            console.log("fetchRecentArticles function called");
-            const substackUsername = 'jonathanpolitzki';
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=https://${substackUsername}.substack.com/feed`;
-
-            try {
-                console.log("Fetching articles from:", apiUrl);
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                console.log("Received data:", data);
-                
-                if (!data.items || data.items.length === 0) {
-                    throw new Error("No articles found in the response");
-                }
-
-                const articles = data.items.slice(0, 5); // Get the 5 most recent articles
-
-                const articlesContainer = document.getElementById('recent-articles');
-                if (!articlesContainer) {
-                    console.error("Couldn't find the 'recent-articles' container");
-                    return;
-                }
-
-                articlesContainer.innerHTML = ''; // Clear any existing content
-
-                articles.forEach(article => {
-                    const articleElement = document.createElement('div');
-                    articleElement.className = 'article-item';
-                    articleElement.innerHTML = `
-                        <a href="${article.link}" class="article-title">${article.title}</a>
-                        <div class="article-description">${article.description.split(' ').slice(0, 20).join(' ')}...</div>
-                    `;
-                    articlesContainer.appendChild(articleElement);
-                });
-
-                console.log("Articles added to the DOM");
-            } catch (error) {
-                console.error('Error fetching Substack articles:', error);
-                const articlesContainer = document.getElementById('recent-articles');
-                if (articlesContainer) {
-                    articlesContainer.innerHTML = '<p>Error loading articles. Please try again later.</p>';
-                }
-            }
-        }
-
-         // Updated Chatbot functionality
-        const chatMessages = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-
-        function addMessage(message, isUser) {
-            const messageElement = document.createElement('div');
-            messageElement.className = `chat-message ${isUser ? 'user-message' : 'bot-message'}`;
-            messageElement.textContent = message;
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (message) {
-                addMessage(message, true);
-                userInput.value = '';
-
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Script started");
+        
+            async function fetchRecentArticles() {
+                console.log("fetchRecentArticles function called");
+                const substackUsername = 'jonathanpolitzki';
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=https://${substackUsername}.substack.com/feed`;
+        
                 try {
-                    const response = await fetch('http://127.0.0.1:5000/ask', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ question: message }),
-                    });
+                    console.log("Fetching articles from:", apiUrl);
+                    const response = await fetch(apiUrl);
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     const data = await response.json();
-                    addMessage(data.answer, false);
+                    console.log("Received data:", data);
+                    
+                    if (!data.items || data.items.length === 0) {
+                        throw new Error("No articles found in the response");
+                    }
+        
+                    const articles = data.items.slice(0, 5); // Get the 5 most recent articles
+        
+                    const articlesContainer = document.getElementById('recent-articles');
+                    if (!articlesContainer) {
+                        console.error("Couldn't find the 'recent-articles' container");
+                        return;
+                    }
+        
+                    articlesContainer.innerHTML = ''; // Clear any existing content
+        
+                    articles.forEach(article => {
+                        const articleElement = document.createElement('div');
+                        articleElement.className = 'article-item';
+                        articleElement.innerHTML = `
+                            <a href="${article.link}" class="article-title">${article.title}</a>
+                            <div class="article-description">${article.description.split(' ').slice(0, 20).join(' ')}...</div>
+                        `;
+                        articlesContainer.appendChild(articleElement);
+                    });
+        
+                    console.log("Articles added to the DOM");
                 } catch (error) {
-                    console.error('Error:', error);
-                    addMessage("Sorry, I couldn't process your request. The AI server might be offline.", false);
+                    console.error('Error fetching Substack articles:', error);
+                    const articlesContainer = document.getElementById('recent-articles');
+                    if (articlesContainer) {
+                        articlesContainer.innerHTML = '<p>Error loading articles. Please try again later.</p>';
+                    }
                 }
             }
-        }
-
-        sendButton.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOMContentLoaded event fired");
-            fetchRecentArticles();
-        });
-
-        // Also try to call it after a short delay
-        setTimeout(fetchRecentArticles, 2000);
-
         
-    </script>
-    <script>
-        async function testServer() {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/test');
-                const data = await response.json();
-                console.log(data.message);
-            } catch (error) {
-                console.error('Error:', error);
+            // Call fetchRecentArticles immediately
+            fetchRecentArticles();
+        
+            // Custom event tracking
+            function trackEvent(category, action, label) {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', action, {
+                        'event_category': category,
+                        'event_label': label
+                    });
+                }
             }
-        }
-        testServer();
-
-        // Custom event tracking
-        function trackEvent(category, action, label) {
-            if (typeof gtag !== 'undefined') {
-                gtag('event', action, {
-                    'event_category': category,
-                    'event_label': label
+        
+            // Example: Track clicks on work items
+            document.querySelectorAll('.work-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    trackEvent('Work', 'Click', this.querySelector('.work-title').textContent);
+                });
+            });
+        
+            // Example: Track article clicks
+            const recentArticles = document.getElementById('recent-articles');
+            if (recentArticles) {
+                recentArticles.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('article-title')) {
+                        trackEvent('Article', 'Click', e.target.textContent);
+                    }
                 });
             }
-        }
-        // Example: Track clicks on work items
-        document.querySelectorAll('.work-item').forEach(item => {
-            item.addEventListener('click', function() {
-                trackEvent('Work', 'Click', this.querySelector('.work-title').textContent);
+        
+            // Track outbound link clicks
+            document.querySelectorAll('.contact-icons a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    trackEvent('Contact', 'Click', this.getAttribute('href'));
+                });
             });
-        });
-
-        // Example: Track article clicks
-        document.getElementById('recent-articles').addEventListener('click', function(e) {
-            if (e.target.classList.contains('article-title')) {
-                trackEvent('Article', 'Click', e.target.textContent);
-            }
-        });
-
-        // Track outbound link clicks
-        document.querySelectorAll('.contact-icons a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                trackEvent('Contact', 'Click', this.getAttribute('href'));
+        
+            // Track scroll depth
+            window.addEventListener('scroll', function() {
+                let scrollPercentage = Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100);
+                if (scrollPercentage % 25 === 0) { // Track at 25%, 50%, 75%, 100%
+                    trackEvent('Scroll', 'Depth', scrollPercentage + '%');
+                }
             });
+        
+            // Hotjar tracking
+            window.hj=window.hj||function(){(hj.q=hj.q||[]).push(arguments)};
+            hj('identify', null, {
+                'Chat Input': true
+            });
+            hj('event', 'chat_started');
         });
-
-        // Track chat interactions
-        sendButton.addEventListener('click', function() {
-            trackEvent('Chat', 'Send Message', userInput.value);
-        });
-
-        // Track scroll depth
-        window.addEventListener('scroll', function() {
-            let scrollPercentage = Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100);
-            if (scrollPercentage % 25 === 0) { // Track at 25%, 50%, 75%, 100%
-                trackEvent('Scroll', 'Depth', scrollPercentage + '%');
-            }
-        });
-        // track words typed into chat
-        window.hj=window.hj||function(){(hj.q=hj.q||[]).push(arguments)};
-        hj('identify', null, {
-        'Chat Input': true
-        });
-        hj('event', 'chat_started');
-
-        document.getElementById('user-input').addEventListener('change', function() {
-        hj('event', 'chat_input', {'message': this.value});
-        });
-    </script>
+        </script>
 </body>
 </html>
