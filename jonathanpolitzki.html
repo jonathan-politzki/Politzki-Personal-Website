@@ -164,6 +164,8 @@
             color: #28a745;
         }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
 </head>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q8G0JQT1NP"></script>
@@ -183,6 +185,7 @@
             r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
             a.appendChild(r);
         })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+
     </script>
 <body>
     <header class="header-container">
@@ -280,7 +283,7 @@
             }
         }
 
-        // Chatbot functionality
+         // Updated Chatbot functionality
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
@@ -299,17 +302,24 @@
                 addMessage(message, true);
                 userInput.value = '';
 
-                // Here you would typically send the message to your LLM backend
-                // For now, we'll just echo the message back
-                const response = await mockLLMResponse(message);
-                addMessage(response, false);
+                try {
+                    const response = await fetch('http://localhost:5000/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ question: message }),
+                    });
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    addMessage(data.answer, false);
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage("Sorry, I couldn't process your request. The AI server might be offline.", false);
+                }
             }
-        }
-
-        async function mockLLMResponse(message) {
-            // This is a placeholder for the actual LLM integration
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-            return `You said: "${message}". This is a mock response. Integrate with your LLM here.`;
         }
 
         sendButton.addEventListener('click', sendMessage);
@@ -319,6 +329,7 @@
 
         // Call the function when the page loads
         fetchRecentArticles();
+        
     </script>
     <script>
         // Custom event tracking
@@ -363,7 +374,16 @@
                 trackEvent('Scroll', 'Depth', scrollPercentage + '%');
             }
         });
+        // track words typed into chat
+        window.hj=window.hj||function(){(hj.q=hj.q||[]).push(arguments)};
+        hj('identify', null, {
+        'Chat Input': true
+        });
+        hj('event', 'chat_started');
 
+        document.getElementById('user-input').addEventListener('change', function() {
+        hj('event', 'chat_input', {'message': this.value});
+        });
     </script>
 </body>
 </html>
