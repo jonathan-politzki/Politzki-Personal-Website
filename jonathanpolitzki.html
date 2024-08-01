@@ -256,6 +256,7 @@
         width="100%"
         style="height: 100%; min-height: 700px"
         frameborder="0"
+        id="chatbase-iframe"
         ></iframe>
         <script>
         window.embeddedChatbotConfig = {
@@ -272,9 +273,8 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("Script started");
-        
+        document.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM fully loaded and parsed');        
             async function fetchRecentArticles() {
                 console.log("fetchRecentArticles function called");
                 const substackUsername = 'jonathanpolitzki';
@@ -375,6 +375,49 @@
             });
             hj('event', 'chat_started');
         });
-        </script>
+
+            // Wait for the iframe to load
+            document.getElementById('chatbase-iframe').addEventListener('load', function() {
+                // Get the iframe's content window
+                var iframeWindow = this.contentWindow;
+                
+                // Use Hotjar's targeting to identify the chat input field
+                hj('identify', null, {
+                    'chatInput': true
+                });
+                
+                // Set up a MutationObserver to watch for changes in the iframe
+                var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList') {
+                            var addedNodes = mutation.addedNodes;
+                            for (var i = 0; i < addedNodes.length; i++) {
+                                if (addedNodes[i].nodeType === Node.ELEMENT_NODE) {
+                                    // Check if the added node is the chat input field
+                                    var chatInput = addedNodes[i].querySelector('input[type="text"]');
+                                    if (chatInput) {
+                                        // Track the input field
+                                        hj('tagRecording', ['chatInput']);
+                                        
+                                        // Track when a message is sent
+                                        chatInput.addEventListener('keydown', function(event) {
+                                            if (event.key === 'Enter') {
+                                                hj('event', 'chat_message_sent');
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+
+                // Start observing the iframe's body
+                observer.observe(iframeWindow.document.body, { childList: true, subtree: true });
+            });
+
+            // Track when the chat is started
+            hj('event', 'chat_started');
+    </script>
 </body>
 </html>
